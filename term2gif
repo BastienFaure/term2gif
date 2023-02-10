@@ -1,0 +1,32 @@
+#!/bin/bash
+usage() {
+cat <<EOT
+Usage:
+    ${0##*/} {-h|--help}
+    ${0##*/} [optional agg args] record			Record the terminal and outputs a GIF
+EOT
+}
+
+run() {
+	filename=$(mktemp)
+	asciinema rec $filename.cast
+	args=( "$@" )
+	args+=($filename.cast)
+	args+=($filename.gif)
+	echo "[+] Converting .cast file into GIF with agg"
+	agg ${args[@]} >/dev/null
+	echo "[+] GIF file written at $filename.gif"
+	rm $filename.cast
+}
+
+# save args except last one in an array
+args="${@%${!#}}"
+
+[ $# -eq 0 ] && set -- '--help'
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -h|--help)      usage; exit 0;;
+        record)         run $args; exit 0;;
+    esac
+    shift
+done
